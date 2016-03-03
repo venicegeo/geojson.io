@@ -96,28 +96,23 @@ module.exports = function fileBar(context) {
                             meta.clear(context);
                         }
                     }
-                }, {
-                    title: 'Random: Points',
-                    alt: 'Add random points to your map',
+                },
+                {
+                    title: 'Add AOI to GRiD',
+                    alt: 'Add AOI to GRiD',
                     action: function() {
-                        var response = prompt('Number of points (default: 100)');
-                        if (response === null) return;
-                        var count = parseInt(response, 10);
-                        if (isNaN(count)) count = 100;
-                        meta.random(context, count, 'point');
-                    }
-                }, {
-                    title: 'Add bboxes',
-                    alt: 'Add bounding box members to all applicable GeoJSON objects',
-                    action: function() {
-                        meta.bboxify(context);
-                    }
-                }, {
-                    title: 'Flatten Multi Features',
-                    alt: 'Flatten MultiPolygons, MultiLines, and GeometryCollections into simple geometries',
-                    action: function() {
-                        meta.flatten(context);
-                    }
+
+                    	var wkt = getWKT();
+                    	lookupGeom(wkt, function (name){
+                    		addAOI(wkt, name, function(response){
+                    			delete response.success;
+                    			delete response['GRiD API'];
+                    			for (var inx in response) {
+                        			alert("Added: " + inx);
+                    			}
+                    		});
+                    	});
+                	}
                 }
             ]
         }];
@@ -480,21 +475,69 @@ module.exports = function fileBar(context) {
         }
     }
 
-    function downloadWKT() {
-        if (d3.event) d3.event.preventDefault();
+    function getWKT() {
         var contentArray = [];
         var features = context.data.get('map').features;
         if (features.length === 0) return;
         var content = features.map(wellknown.stringify).join('\n');
+        return content;
+    }
+    function downloadWKT() {
+        if (d3.event) d3.event.preventDefault();
         var meta = context.data.get('meta');
-        saveAs(new Blob([content], {
-            type: 'text/plain;charset=utf-8'
-        }), 'map.wkt');
+        var content = getWKT();
+        if(content){
+            saveAs(new Blob([content], {
+                type: 'text/plain;charset=utf-8'
+            }), 'map.wkt');
+        };
     }
 
     function allProperties(properties, key, value) {
         properties[key] = value;
         return true;
+    }
+    
+    function lookupGeom(wkt, callback) {
+    	
+    	function processRequest(e) {
+    	    if (xhr.readyState == 4 && xhr.status == 200) {
+    	    	callback((xhr.response && xhr.response.name) ? xhr.response.name : "unknown");
+    	    }
+    	}
+
+    	if(wkt){
+    		var contentType ="application/x-www-form-urlencoded; charset=utf-8";                   
+    		if(window.XDomainRequest) //for IE8,IE9
+    			contentType = "text/plain";
+    		var xhr = new XMLHttpRequest();
+        	xhr.open('GET', encodeURI("http://localhost:8081/lookup?geom=" + wkt), true);
+        	xhr.responseType = "json";
+        	xhr.send();
+        	xhr.contentType = contentType;
+        	xhr.onreadystatechange = processRequest;
+    	}
+    }
+    
+    function addAOI(wkt, name, callback) {
+    	
+    	function processRequest(e) {
+    	    if (xhr.readyState == 4 && xhr.status == 200) {
+    	    	callback(xhr.response);
+    	    }
+    	}
+
+    	if(wkt){
+    		var contentType ="application/x-www-form-urlencoded; charset=utf-8";                   
+    		if(window.XDomainRequest) //for IE8,IE9
+    			contentType = "text/plain";
+    		var xhr = new XMLHttpRequest();
+        	xhr.open('GET', encodeURI("http://localhost:8081/addaoi?name=" + name + "&geom=" + wkt), true);
+        	xhr.responseType = "json";
+        	xhr.send();
+        	xhr.contentType = contentType;
+        	xhr.onreadystatechange = processRequest;
+    	}
     }
 
     return bar;

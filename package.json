@@ -14,10 +14,7 @@
     "detect-json-indent": "0.0.0",
     "escape-html": "^1.0.1",
     "filesaver.js": "0.1.0",
-    "geojson-extent": "^0.3.1",
-    "geojson-flatten": "~0.1.0",
     "geojson-normalize": "0.0.0",
-    "geojson-random": "0.1.0",
     "geojson2dsv": "0.0.0",
     "geojsonhint": "0.3.4",
     "gist-map-browser": "0.2.0",
@@ -43,14 +40,14 @@
     "xtend": "3.0.0"
   },
   "devDependencies": {
-    "brfs": "1.0.2",
     "browserify": "4.1.11",
-    "eslint": "^1.10.3",
-    "tape": "~2.12.3"
+    "brfs": "1.0.2",
+    "tape": "~2.12.3",
+    "jshint": "2.5.1"
   },
   "scripts": {
     "start": "nodewebkit",
-    "test": "eslint src",
+    "test": "jshint src",
     "test-browser": "browserify test/index.js | testling"
   },
   "repository": {
