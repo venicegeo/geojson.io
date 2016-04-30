@@ -20,6 +20,19 @@ module.exports = function(context) {
             } else {
                 props = geojson.geometry ? [geojson.properties] :
                     geojson.features.map(getProperties);
+
+                // users don't want to see "[object Object]"
+                // WARNING: this changes the object itself.
+                // Better would be to clone it instead.
+                for (var k in props) {
+                    var prop = props[k];
+                    for (var m in prop) {
+                        if (typeof prop[m] === 'object') {
+                          prop[m] = JSON.stringify(prop[m]);
+                        }
+                    }
+                }
+
                 selection.select('.blank-banner').remove();
                 selection
                     .data([props])

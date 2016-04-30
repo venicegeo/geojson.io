@@ -25484,6 +25484,17 @@ module.exports = function(context) {
             } else {
                 props = geojson.geometry ? [geojson.properties] :
                     geojson.features.map(getProperties);
+
+                // users don't want to see "[object Object]"
+                for (var k in props) {
+                    var prop = props[k];
+                    for (var m in prop) {
+                        if (typeof prop[m] === 'object') {
+                          prop[m] = JSON.stringify(prop[m]);
+                        }
+                    }
+                }
+
                 selection.select('.blank-banner').remove();
                 selection
                     .data([props])
@@ -26680,7 +26691,12 @@ function bindPopup(l) {
     // Steer clear of XSS
     for (var k in props) {
         var e = escape(k);
-        properties[e] = escape(props[k]);
+        // users don't want to see "[object Object]"
+        if (typeof props[k] === 'object') {
+          properties[e] = escape(JSON.stringify(props[k]));
+        } else {
+          properties[e] = escape(props[k]);
+        }
     }
 
     if (!properties) return;
